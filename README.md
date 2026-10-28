@@ -1,104 +1,73 @@
 # CoverCraft AI — AI Cover Letter Generator
 
-Generate personalized, professional cover letters in seconds. Works **with** Google Gemini and
-**without** any API key (offline demo/template mode).
-
-> Implementation note: the workspace provided for this sprint is a **Next.js (App Router)**
-> project rather than Vite + a separate `/api` folder. The architecture is equivalent — the
-> serverless endpoint lives at `src/app/api/generate/route.ts` and is deployable to Vercel as-is.
+CoverCraft AI is a web application that generates personalized, professional cover letters using Google Gemini AI or a built-in demo mode without an API key.
 
 ## Features
 
-- Two-column generator dashboard (stacked on mobile) with a polished empty state.
-- Required-field validation with accessible inline error messages.
-- **Phase 1 – Demo mode:** template-literal letter generation using the user's real inputs.
-- **Phase 2 – Gemini AI:** `POST /api/generate` calls Gemini `gemini-2.5-flash` via the official
-  `@google/genai` SDK, server-side only.
-- **Phase 3 – Resume PDF parsing:** client-side text extraction with `pdfjs-dist`.
-- Copy to clipboard, download `.txt`, inline editing, regenerate, clear/new letter.
-- Word & character counts, AI vs Demo mode indicator, loading skeleton, error + retry UI.
-- Responsive header with mobile menu, Features and How It Works sections, privacy notice.
+- Responsive cover letter generator dashboard.
+- Form validation for candidate details and skills.
+- Demo mode using personalized templates.
+- Gemini AI integration through a secure server-side API.
+- Resume PDF upload and text extraction.
+- Copy, edit, download, and regenerate cover letters.
+- Loading indicators, error handling, and retry options.
 
-## Tech stack
+## Tech Stack
 
-Next.js 16 (App Router, React 19) · TypeScript · Tailwind CSS v4 · `@google/genai` ·
-`pdfjs-dist` · `lucide-react`.
+Next.js 16, React 19, TypeScript, Tailwind CSS, Google Gemini API, PDF.js, and Lucide React.
 
-## Project structure
+## Project Structure
 
-```
-src/
-  app/
-    api/generate/route.ts   # Server-side Gemini endpoint (validation, limits, timeout)
-    api/health/route.ts
-    page.tsx  layout.tsx  globals.css
-  components/
-    Header.tsx Hero.tsx Generator.tsx ResumeUploader.tsx
-    CoverLetterPreview.tsx LoadingState.tsx Sections.tsx
-  lib/
-    generateTemplate.ts  extractPdfText.ts  types.ts
-public/pdf.worker.min.mjs   # PDF.js worker served locally
-.env.example  Prompts.md  README.md
-```
+- `src/app/` — Pages, layouts, and API routes.
+- `src/components/` — UI components and generator form.
+- `src/lib/` — Template generation, PDF extraction, and shared types.
+- `public/` — Static assets and PDF.js worker.
+- `.env.example` — Environment variable template.
+- `Prompts.md` — AI prompting and implementation notes.
 
-## Local setup
+## Installation and Setup
+
+Install the dependencies:
 
 ```bash
 npm install
-cp .env.example .env        # then edit .env
-npm run dev                 # http://localhost:3000
 ```
 
-### Enabling real AI
+Create a `.env` file in the project root and add your Gemini API key:
 
-1. Create an API key at <https://aistudio.google.com/apikey>.
-2. Add it to `.env`:
-   ```
-   GEMINI_API_KEY=your_actual_key_here
-   ```
-3. Restart the dev server.
+```env
+GEMINI_API_KEY=your_api_key_here
+```
 
-Without the key, `/api/generate` returns HTTP 503 with a clear message and the UI offers a
-one-click "Generate demo template instead" fallback. You can also tick **Use demo mode** to skip
-the AI entirely.
-
-### On Vercel
-
-Project → **Settings → Environment Variables** → add `GEMINI_API_KEY` (Production, Preview,
-Development) → redeploy. Never add it as `NEXT_PUBLIC_*`.
-
-## Build & deploy
+Start the development server:
 
 ```bash
-npm run build
-npm run start      # production server
+npm run dev
 ```
 
-Deploy by importing the Git repository into Vercel (framework preset: Next.js) and setting the
-environment variable above.
+Open `http://localhost:3000` in your browser.
+
+## AI Integration
+
+The application uses Google's Gemini API through the server-side `/api/generate` endpoint. If the API key is unavailable, users can generate cover letters using demo mode.
 
 ## Security
 
-- The key is only read via `process.env.GEMINI_API_KEY` inside the route handler — it never
-  reaches the client bundle.
-- `.env`, `.env.local` and `.env.*.local` are git-ignored; `.env.example` holds placeholders only.
-- Request payloads are capped (80 KB), resume text 6,000 chars, job description 4,000 chars.
-- The AI request uses a 45-second abort timeout; errors are mapped to friendly messages.
-- Resume text and job descriptions are explicitly framed as untrusted data in the prompt so
-  embedded instructions cannot override the system rules.
-- No API keys or resume contents are logged; nothing is persisted.
+- API keys are stored in environment variables.
+- `.env` files are excluded from Git using `.gitignore`.
+- Input validation and request limits help protect the API.
+- Resume content is processed for generation without permanent storage.
 
-## Testing performed
+## Testing
 
-`npx next typegen`, `tsc --noEmit`, and `npm run build` all pass. Demo-mode generation, the
-validation rules, the 503 no-key path and the production start/health check were exercised
-locally. Clipboard, `.txt` download and PDF parsing are browser APIs implemented per spec but
-should be re-checked manually in your browser.
+The project includes build and TypeScript checks, form validation, demo generation, API error handling, and PDF extraction. Browser features should also be tested manually.
 
-## Known limitations
+## Deployment
 
-- Scanned/image-only PDFs are **not** supported (no OCR); the uploader reports this clearly.
-- Only the first 10 PDF pages are parsed.
-- No authentication, payments, history or database by design.
-- Markdown rendering is deliberately limited to bold/italic, rendered as React nodes (no HTML
-  injection).
+Deploy the project using Vercel with the Next.js framework. Add `GEMINI_API_KEY` under **Settings → Environment Variables**, then redeploy.
+
+## Known Limitations
+
+- Scanned PDFs are not supported because OCR is not implemented.
+- Only the first 10 PDF pages are processed.
+- Authentication, payments, and database features are not included.
